@@ -1,0 +1,59 @@
+openapi: 3.0.3
+info:
+  title: FileConv API
+  version: 0.3.0
+  description: REST API для конвертации файлов
+servers:
+  - url: http://localhost:8000/api/v1
+paths:
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Регистрация
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token: { type: string }
+                  token_type: { type: string, default: bearer }
+  /convert:
+    post:
+      tags: [convert]
+      summary: Загрузить файл и запустить конвертацию
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, target_format]
+              properties:
+                file: { type: string, format: binary }
+                target_format: { type: string, enum: [pdf, png, jpg, webp, xlsx, csv] }
+      responses:
+        '202':
+          description: Задача создана
+        '400': { description: Неверный формат }
+        '401': { description: Не авторизован }
+        '413': { description: Файл слишком большой }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
